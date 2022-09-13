@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 
-import './style.css'
 import NFT3Modal from '../NFT3Modal'
 import IconMetamask from '../../assets/metamask.svg'
 import IconPhantom from '../../assets/phantom.svg'
