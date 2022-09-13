@@ -1,55 +1,15 @@
-import {
-  createContext,
-  Context,
-  PropsWithChildren,
-  useState,
-  useCallback,
-  useContext,
-  useMemo,
-  useEffect
-} from 'react'
 import { NFT3Client } from '@nft3sdk/client'
-
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import EthereumWallet from '../libs/EthereumWallet'
 import SolanaWallet from '../libs/SolanaWallet'
-import { NetworkType, WalletType, IWallet } from '../libs/types'
-import WalletSelect from '../components/WalletSelect'
-import NFT3Register from '../components/NFT3Register'
+import type { WalletType, NetworkType, IWallet } from '../libs/types'
+import type { LoginResult } from '../types'
+import { createContext } from '../utils/createContext'
 
-type NFT3Theme = 'light' | 'dark'
-
-interface LoginResult {
-  result: boolean
-  needRegister: boolean
-  identifier?: string
+export type NFT3DataServiceProps = {
+  endpoint: string
 }
-
-interface NFT3Context {
-  account?: string
-  client: NFT3Client
-  didname?: string
-  ready?: boolean
-  theme: NFT3Theme
-  identifier?: string
-  connect: () => void
-  login: () => Promise<LoginResult>
-  register: (didname: string) => Promise<string>
-  logout: () => void
-  checkLogin: () => Promise<string | undefined>
-  eagerConnect: () => void
-  disconnect: () => void
-  selectWallet: (wallet: WalletType) => void
-}
-
-interface IContexts {
-  value: Context<NFT3Context> | null
-}
-
-const context: IContexts = {
-  value: null
-}
-
-function useWebNFT3(endpoint: string) {
+export const useNFT3DataService = ({ endpoint }: NFT3DataServiceProps) => {
   const [ready, setReady] = useState(false)
   const [account, setAccount] = useState<string>()
   const [wallet, setWallet] = useState<WalletType>()
@@ -80,14 +40,14 @@ function useWebNFT3(endpoint: string) {
       client.did.config({
         network: 'ethereum',
         signer,
-        signKey: sessionKey
+        signKey: sessionKey,
       })
     }
     if (nft3Wallet?.network === 'Solana') {
       client.did.config({
         network: 'solana',
         signer: nft3Wallet?.provider,
-        signKey: sessionKey
+        signKey: sessionKey,
       })
     }
   }, [nft3Wallet, client])
@@ -107,7 +67,7 @@ function useWebNFT3(endpoint: string) {
     const info: LoginResult = {
       result: false,
       needRegister: false,
-      identifier: undefined
+      identifier: undefined,
     }
     try {
       const result = await client.did.login()
@@ -208,108 +168,12 @@ function useWebNFT3(endpoint: string) {
     register,
     setWallet,
     setNetwork,
-    eagerConnect
+    eagerConnect,
   }
 }
 
-function createNFT3Context() {
-  context.value = createContext<NFT3Context>({
-    client: new NFT3Client(''),
-    account: undefined,
-    didname: undefined,
-    theme: 'light',
-    connect: () => {},
-    eagerConnect: () => {},
-    disconnect: () => {},
-    logout: () => {},
-    checkLogin: () => Promise.resolve(undefined),
-    login: () =>
-      Promise.resolve({
-        result: false,
-        needRegister: false,
-        identifier: undefined
-      }),
-    register: () => Promise.resolve(''),
-    selectWallet: () => {}
-  })
-  const Provider = context.value.Provider
+const { Provider: NFT3DataProvider, createUseContext } =
+  createContext(useNFT3DataService)
 
-  return function useNFT3Provider(
-    props: PropsWithChildren<{
-      endpoint: string
-      theme?: NFT3Theme
-      silent?: boolean
-    }>
-  ) {
-    const theme = props.theme || 'light'
-    const {
-      account,
-      selectVisible,
-      nft3Wallet,
-      client,
-      didname,
-      ready,
-      identifier,
-      needRegister,
-      selectWallet,
-      connect,
-      setAccount,
-      register,
-      login,
-      logout,
-      checkLogin,
-      setSelectVisible,
-      setNeedRegister,
-      eagerConnect
-    } = useWebNFT3(props.endpoint)
-
-    const disconnect = async () => {
-      nft3Wallet?.disconnect()
-      setAccount(undefined)
-      localStorage.removeItem('wallet')
-    }
-
-    return (
-      <Provider
-        value={{
-          account,
-          client,
-          didname,
-          ready,
-          theme,
-          identifier,
-          login,
-          logout,
-          register,
-          checkLogin,
-          eagerConnect,
-          connect,
-          disconnect,
-          selectWallet
-        }}
-      >
-        {props.children}
-        {props.silent !== true && (
-          <>
-            <WalletSelect
-              visible={selectVisible}
-              onClose={wallet => {
-                if (wallet) selectWallet(wallet)
-                setSelectVisible(false)
-              }}
-            />
-            <NFT3Register
-              visible={needRegister}
-              onClose={() => setNeedRegister(false)}
-            />
-          </>
-        )}
-      </Provider>
-    )
-  }
-}
-
-export const NFT3Provider = createNFT3Context()
-export function useNFT3() {
-  return useContext(context.value!)
-}
+export const useNFT3Data = createUseContext()
+export default NFT3DataProvider

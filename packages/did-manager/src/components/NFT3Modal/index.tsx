@@ -1,5 +1,5 @@
 import { PropsWithChildren } from 'react'
-import { useNFT3 } from '../../hooks/webNFT3'
+import { useNFT3 } from '../../domains/NFT3'
 
 interface Props {
   title: string
@@ -11,7 +11,7 @@ export default function NFT3Modal({
   title,
   visible,
   onClose,
-  children
+  children,
 }: PropsWithChildren<Props>) {
   const { theme } = useNFT3()
 

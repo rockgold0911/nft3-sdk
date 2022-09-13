@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import NFT3Modal from '../NFT3Modal'
 import NFT3Button from '../NFT3Button'
-import { useNFT3 } from '../../hooks/webNFT3'
+import { useNFT3 } from '../../domains/NFT3'
 
 interface Props {
   visible: boolean
